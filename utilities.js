@@ -1,52 +1,16 @@
-import mysql from 'mysql';
-const port = 3000;
-
-const pool = mysql.createPool({
-  host: "127.0.0.1",
-  port: 3306,
-  user: "root",
-  password: "password",
-  database: "train"
-});
+import { addToTable, search } from './methods.js';
 
 export const addStation = async (body) => {
-  let station = {
-    "stationName": body["stationName"],
-    "stationCode": body["stationCode"],
-  };
-  return new Promise((resolve, reject) => {
-    pool.getConnection((err, conn) => {
-      if (err) throw err;
-      conn.query("INSERT INTO station SET ?", station,
-        (error, results, fields) => {
-          conn.release();
-          if (error) reject(error);
-          else {
-            console.log({ id: results.insertId, ...station });
-            resolve({ id: results.insertId, ...station });
-          }
-        });
-    });
-  });
+  return new Promise((resolve, reject) => { resolve(addToTable(body, "station")) })
+}
+export const addTrain = async (body) => {
+  return new Promise((resolve, reject) => { resolve(addToTable(body, "train")) })
 }
 export const searchStation = async (id) => {
-  return new Promise((resolve, reject) => {
-    pool.getConnection((err, conn) => {
-      if (err) throw err;
-      conn.query("SELECT * FROM station WHERE id=?;", id,
-        (error, results, fields) => {
-          conn.release();
-          if (error) reject(error);
-          else if (results.affectedRows === 0) {
-            resolve({ error: "not_found" })
-          }
-          else {
-            resolve(results)
-          }
-        }
-      )
-    })
-  })
+  return new Promise((resolve, reject) => { resolve(search(id, "station")) })
+}
+export const searchTrain = async (id) => {
+  return new Promise((resolve, reject) => { resolve(search(id, "train")) })
 }
 export const searchAllStation = async () => {
   return new Promise((resolve, reject) => {
