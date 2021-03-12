@@ -1,7 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import { addStation, searchStation, searchAllStation, updateStation, removeStation, removeAllStation, addTrain, searchAllTrain, searchTrain, updateTrain, removeTrain, removeAllTrain } from './utilities.js';
-
+import { addStation, searchStation, searchAllStation, updateStation, removeStation, removeAllStation, addTrain, searchAllTrain, searchTrain, updateTrain, removeTrain, removeAllTrain, addTrainroute } from './utilities.js';
+import { trainroute } from './methods.js';
 const app = express();
 
 app.use(bodyParser.json());
@@ -57,6 +57,14 @@ app.delete("/train/:id", async (req, res) => {
 app.delete("/train", async (req, res) => {
   res.send(await removeAllTrain())
 });
+
+app.post("/addtrainroute", async (req, res) => {
+  res.send(await addTrainroute(req.body));
+});
+
+app.get("/trainroute", async (req, res) => {
+  res.send(await trainroute(req.query))
+})
 
 app.listen(5000, () => {
   console.log("Server is running on port 5000.");
