@@ -24,6 +24,14 @@ export const addToTable = async (body, table) => {
       "train": body["train"]
     }
   }
+  else if (table === "trainroute") {
+    entry = {
+      trainID: body["trainID"],
+      stationID: body["stationID"],
+      time: body["time"],
+      stay: body["stay"]
+    }
+  }
   return new Promise((resolve, reject) => {
     pool.getConnection((err, conn) => {
       if (err) throw err;
@@ -138,6 +146,22 @@ export const removeAll = async (table) => {
           if (error) reject(error);
           else {
             resolve("Deleted all records")
+          }
+        }
+      )
+    })
+  })
+}
+export const trainroute = async (query) => {
+  return new Promise((resolve, reject) => {
+    pool.getConnection((err, conn) => {
+      if (err) throw err;
+      conn.query(`SELECT A.trainID FROM trainroute A, trainroute B WHERE A.trainID=B.trainID AND A.stationID='${query.from}' AND B.stationID='${query.to}' AND A.time<B.time;`,
+        (error, results, fields) => {
+          conn.release();
+          if (error) reject(error);
+          else {
+            resolve(results)
           }
         }
       )

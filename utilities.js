@@ -6,6 +6,9 @@ export const addStation = async (body) => {
 export const addTrain = async (body) => {
   return new Promise((resolve, reject) => { resolve(addToTable(body, "train")) })
 }
+export const addTrainroute = async (body) => {
+  return new Promise((resolve, reject) => { resolve(addToTable(body, "trainroute")) })
+}
 export const searchStation = async (id) => {
   return new Promise((resolve, reject) => { resolve(search(id, "station")) })
 }
