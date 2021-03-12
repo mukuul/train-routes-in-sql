@@ -1,6 +1,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import { addStation, searchStation, searchAllStation, updateStation, deleteStation, deleteAllStation, addTrain, searchTrain } from './utilities.js';
+import { addStation, searchStation, searchAllStation, updateStation, removeStation, removeAllStation, addTrain, searchAllTrain, searchTrain, updateTrain, removeTrain, removeAllTrain } from './utilities.js';
 
 const app = express();
 
@@ -27,11 +27,11 @@ app.put("/station/:id", async (req, res) => {
 });
 
 app.delete("/station/:id", async (req, res) => {
-  res.send(await deleteStation(req.params.id))
+  res.send(await removeStation(req.params.id))
 });
 
 app.delete("/station", async (req, res) => {
-  res.send(await deleteAllStation())
+  res.send(await removeAllStation())
 });
 
 app.post("/addtrain", async (req, res) => {
@@ -39,7 +39,7 @@ app.post("/addtrain", async (req, res) => {
 });
 
 app.get("/train", async (req, res) => {
-  res.send(await searchAllStation());
+  res.send(await searchAllTrain());
 });
 
 app.get("/train/:id", async (req, res) => {
@@ -47,15 +47,15 @@ app.get("/train/:id", async (req, res) => {
 });
 
 app.put("/train/:id", async (req, res) => {
-  res.send(await updateStation(req.body, req.params.id))
+  res.send(await updateTrain(req.body, req.params.id))
 });
 
 app.delete("/train/:id", async (req, res) => {
-  res.send(await deleteStation(req.params.id))
+  res.send(await removeTrain(req.params.id))
 });
 
 app.delete("/train", async (req, res) => {
-  res.send(await deleteAllStation())
+  res.send(await removeAllTrain())
 });
 
 app.listen(5000, () => {

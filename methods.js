@@ -60,3 +60,87 @@ export const search = async (id, table) => {
     })
   })
 }
+export const searchAll = async (table) => {
+  return new Promise((resolve, reject) => {
+    pool.getConnection((err, conn) => {
+      if (err) throw err;
+      conn.query(`SELECT * FROM ${table};`,
+        (error, results, fields) => {
+          conn.release();
+          if (error) reject(error);
+          else {
+            resolve(results)
+          }
+        }
+      )
+    })
+  })
+}
+export const update = (body, id, table) => {
+  let entry;
+  if (table === "station") {
+    entry = {
+      "stationName": body["stationName"],
+      "stationCode": body["stationCode"],
+    };
+  }
+  else if (table === "train") {
+    entry = {
+      "trainNumber": body["trainNumber"],
+      "train": body["train"]
+    }
+  }
+  return new Promise((resolve, reject) => {
+    pool.getConnection((err, conn) => {
+      if (err) throw err;
+      conn.query(`UPDATE ${table} SET ? WHERE id=?;`, [entry, id],
+        (error, results, fields) => {
+          conn.release();
+          if (error) reject(error);
+          else if (results.affectedRows === 0) {
+            resolve({ error: "not_found" })
+          }
+          else {
+            console.log(results)
+            console.log({ id: id, ...body });
+            resolve({ id: id, ...body });
+          }
+        });
+    });
+  });
+}
+export const remove = async (id, table) => {
+  return new Promise((resolve, reject) => {
+    pool.getConnection((err, conn) => {
+      if (err) throw err;
+      conn.query(`DELETE FROM ${table} WHERE id=?;`, id,
+        (error, results, fields) => {
+          conn.release();
+          if (error) reject(error);
+          else if (results.affectedRows === 0) {
+            resolve({ error: "not_found" })
+          }
+          else {
+            resolve("Deleted record for id:" + id)
+          }
+        }
+      )
+    })
+  })
+}
+export const removeAll = async (table) => {
+  return new Promise((resolve, reject) => {
+    pool.getConnection((err, conn) => {
+      if (err) throw err;
+      conn.query(`DELETE FROM ${table};`,
+        (error, results, fields) => {
+          conn.release();
+          if (error) reject(error);
+          else {
+            resolve("Deleted all records")
+          }
+        }
+      )
+    })
+  })
+}
