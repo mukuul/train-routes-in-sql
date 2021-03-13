@@ -1,71 +1,88 @@
-import express from 'express';
-import bodyParser from 'body-parser';
-import { addStation, searchStation, searchAllStation, updateStation, removeStation, removeAllStation, addTrain, searchAllTrain, searchTrain, updateTrain, removeTrain, removeAllTrain, addTrainroute } from './utilities.js';
-import { trainroute } from './methods.js';
+import express from "express";
+import bodyParser from "body-parser";
+import {
+  addStation,
+  searchStation,
+  searchAllStation,
+  updateStation,
+  removeStation,
+  removeAllStation,
+  addTrain,
+  searchAllTrain,
+  searchTrain,
+  updateTrain,
+  removeTrain,
+  removeAllTrain,
+  addTrainroute,
+} from "./utilities.js";
+import { trainroute } from "./methods.js";
 const app = express();
+const api = express();
 
-app.use(bodyParser.json());
+app.use("/api", api);
+app.use("/", express.static("public"));
+app.listen(5000, () => {
+  console.log("Server is running on port 5000.");
+});
 
-app.get("/", (req, res) => {
-  res.json({ message: "Welcome to my app." });
-})
+api.use(bodyParser.json());
 
-app.post("/addstation", async (req, res) => {
+api.get("/", (req, res) => {
+  res.json({ message: "Welcome to my api." });
+});
+
+api.post("/addstation", async (req, res) => {
   res.send(await addStation(req.body));
 });
 
-app.get("/station", async (req, res) => {
+api.get("/station", async (req, res) => {
   res.send(await searchAllStation());
 });
 
-app.get("/station/:id", async (req, res) => {
+api.get("/station/:id", async (req, res) => {
   res.send(await searchStation(req.params.id));
 });
 
-app.put("/station/:id", async (req, res) => {
-  res.send(await updateStation(req.body, req.params.id))
+api.put("/station/:id", async (req, res) => {
+  res.send(await updateStation(req.body, req.params.id));
 });
 
-app.delete("/station/:id", async (req, res) => {
-  res.send(await removeStation(req.params.id))
+api.delete("/station/:id", async (req, res) => {
+  res.send(await removeStation(req.params.id));
 });
 
-app.delete("/station", async (req, res) => {
-  res.send(await removeAllStation())
+api.delete("/station", async (req, res) => {
+  res.send(await removeAllStation());
 });
 
-app.post("/addtrain", async (req, res) => {
+api.post("/addtrain", async (req, res) => {
   res.send(await addTrain(req.body));
 });
 
-app.get("/train", async (req, res) => {
+api.get("/train", async (req, res) => {
   res.send(await searchAllTrain());
 });
 
-app.get("/train/:id", async (req, res) => {
+api.get("/train/:id", async (req, res) => {
   res.send(await searchTrain(req.params.id));
 });
 
-app.put("/train/:id", async (req, res) => {
-  res.send(await updateTrain(req.body, req.params.id))
+api.put("/train/:id", async (req, res) => {
+  res.send(await updateTrain(req.body, req.params.id));
 });
 
-app.delete("/train/:id", async (req, res) => {
-  res.send(await removeTrain(req.params.id))
+api.delete("/train/:id", async (req, res) => {
+  res.send(await removeTrain(req.params.id));
 });
 
-app.delete("/train", async (req, res) => {
-  res.send(await removeAllTrain())
+api.delete("/train", async (req, res) => {
+  res.send(await removeAllTrain());
 });
 
-app.post("/addtrainroute", async (req, res) => {
+api.post("/addtrainroute", async (req, res) => {
   res.send(await addTrainroute(req.body));
 });
 
-app.get("/trainroute", async (req, res) => {
-  res.send(await trainroute(req.query))
-})
-
-app.listen(5000, () => {
-  console.log("Server is running on port 5000.");
-})
+api.get("/trainroute", async (req, res) => {
+  res.send(await trainroute(req.query));
+});

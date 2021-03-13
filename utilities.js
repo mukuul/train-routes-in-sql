@@ -1,41 +1,49 @@
-import { addToTable, search, searchAll, update, remove, removeAll } from './methods.js';
+import {
+  addToTable,
+  search,
+  searchAll,
+  update,
+  remove,
+  removeAll,
+} from "./methods.js";
 
 export const addStation = async (body) => {
-  return new Promise((resolve, reject) => { resolve(addToTable(body, "station")) })
-}
+  return addToTable(body, "station");
+};
 export const addTrain = async (body) => {
-  return new Promise((resolve, reject) => { resolve(addToTable(body, "train")) })
-}
+  return addToTable(body, "train");
+};
 export const addTrainroute = async (body) => {
-  return new Promise((resolve, reject) => { resolve(addToTable(body, "trainroute")) })
-}
+  return addToTable(body, "trainroute");
+};
+
 export const searchStation = async (id) => {
-  return new Promise((resolve, reject) => { resolve(search(id, "station")) })
-}
+  return search(id, "station");
+};
 export const searchTrain = async (id) => {
-  return new Promise((resolve, reject) => { resolve(search(id, "train")) })
-}
+  return search(id, "train");
+};
 export const searchAllStation = async () => {
-  return new Promise((resolve, reject) => { resolve(searchAll("station")) })
-}
+  return searchAll("station");
+};
 export const searchAllTrain = async () => {
-  return new Promise((resolve, reject) => { resolve(searchAll("train")) })
-}
+  return searchAll("train");
+};
 export const updateStation = async (body, id) => {
-  return new Promise((resolve, reject) => { resolve(update(body, id, "station")) })
-}
+  return update(body, id, "station");
+};
 export const updateTrain = async (body, id) => {
-  return new Promise((resolve, reject) => { resolve(update(body, id, "station")) })
-}
+  return update(body, id, "station");
+};
 export const removeStation = async (id) => {
-  return new Promise((resolve, reject) => { resolve(remove(id, "station")) })
-}
+  return remove(id, "station");
+};
 export const removeTrain = async (id) => {
-  return new Promise((resolve, reject) => { resolve(remove(id, "train")) })
-}
+  return remove(id, "train");
+};
 export const removeAllStation = async () => {
-  return new Promise((resolve, reject) => { resolve(removeAll(id, "station")) })
-}
+  return removeAll(id, "station");
+};
 export const removeAllTrain = async () => {
-  return new Promise((resolve, reject) => { resolve(removeAll(id, "train")) })
-}
+  return removeAll(id, "train");
+};
