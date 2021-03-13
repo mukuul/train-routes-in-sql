@@ -28,6 +28,13 @@ export const addToTable = async (body, table) => {
       time: body["time"],
       stay: body["stay"],
     };
+  } else if (table === "trainroute") {
+    entry = {
+      trainID: body["trainID"],
+      stationID: body["stationID"],
+      time: body["time"],
+      stay: body["stay"],
+    };
   }
   return new Promise((resolve, reject) => {
     pool.getConnection((err, conn) => {
