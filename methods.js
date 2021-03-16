@@ -163,12 +163,13 @@ export const trainroute = async (query) => {
     pool.getConnection((err, conn) => {
       if (err) throw err;
       conn.query(
-        `SELECT A.trainID, train.trainNumber, train.train
-          FROM trainroute A
-          INNER JOIN trainroute B ON A.trainID=B.trainID
-          INNER JOIN train ON A.trainID=train.id
+        `SELECT trainroute.trainID, train.trainNumber, train.train,trainroute.day
+          FROM schedule A
+          INNER JOIN schedule B ON A.routeID=B.routeID
+          INNER JOIN trainroute ON A.routeID=trainroute.scheduleID
+          INNER JOIN train ON trainroute.trainID=train.id
           WHERE A.stationID='${query.from}' 
-          AND B.stationID='${query.to}' AND A.time<B.time;`,
+          AND B.stationID='${query.to}' AND A.arrTime<B.arrTime;`,
         (error, results, fields) => {
           conn.release();
           if (error) reject(error);
