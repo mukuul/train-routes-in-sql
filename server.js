@@ -15,7 +15,7 @@ import {
   removeAllTrain,
   addTrainroute,
 } from "./utilities.js";
-import { trainroute } from "./methods.js";
+import { trainroute, seatAvailability } from "./methods.js";
 const app = express();
 const api = express();
 
@@ -85,4 +85,8 @@ api.post("/addtrainroute", async (req, res) => {
 
 api.get("/trainroute", async (req, res) => {
   res.send(await trainroute(req.query));
+});
+
+api.get("/seat", async (req, res) => {
+  res.send(await seatAvailability(req.query));
 });

@@ -163,13 +163,77 @@ export const trainroute = async (query) => {
     pool.getConnection((err, conn) => {
       if (err) throw err;
       conn.query(
-        `SELECT trainroute.trainID, train.trainNumber, train.train,trainroute.day
-          FROM schedule A
-          INNER JOIN schedule B ON A.routeID=B.routeID
-          INNER JOIN trainroute ON A.routeID=trainroute.scheduleID
-          INNER JOIN train ON trainroute.trainID=train.id
-          WHERE A.stationID='${query.from}' 
-          AND B.stationID='${query.to}' AND A.arrTime<B.arrTime;`,
+        `SELECT
+        trainroute.trainID,
+        train.trainNumber,
+        train.train,
+        trainroute.day 
+     FROM
+        schedule A 
+        INNER JOIN
+           schedule B 
+           ON A.routeID = B.routeID 
+        INNER JOIN
+           trainroute 
+           ON A.routeID = trainroute.routeID 
+        INNER JOIN
+           train 
+           ON trainroute.trainID = train.id 
+     WHERE
+        A.stationID =? 
+        AND B.stationID =? 
+        AND A.arrTime < B.arrTime;`,
+        [query.from, query.to],
+        (error, results, fields) => {
+          conn.release();
+          if (error) reject(error);
+          else {
+            resolve(results);
+          }
+        }
+      );
+    });
+  });
+};
+
+export const seatAvailability = async (query) => {
+  return new Promise((resolve, reject) => {
+    pool.getConnection((err, conn) => {
+      if (err) throw err;
+      conn.query(
+        `SELECT
+        COUNT(*) as available_seats
+     FROM
+        (
+           SELECT
+              MAX(booking.bookedByUserID) AS available_seat 
+           FROM
+              booking 
+              INNER JOIN
+                 trainroute 
+                 ON booking.trainrouteID = trainroute.id 
+              INNER JOIN
+                 train 
+                 ON trainroute.trainID = train.id 
+           WHERE
+              train.trainNumber = ?
+              AND trainroute.day = ?
+              AND stationID BETWEEN ? AND ?
+              AND nextStationID BETWEEN ? AND ?
+           GROUP BY
+              seatID
+        )
+        table1 
+     WHERE
+        available_seat IS NULL;`,
+        [
+          query.trainnumber,
+          query.day,
+          query.from,
+          query.to,
+          query.from,
+          query.to,
+        ],
         (error, results, fields) => {
           conn.release();
           if (error) reject(error);
