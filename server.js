@@ -15,12 +15,24 @@ import {
   removeAllTrain,
   addTrainroute,
 } from "./utilities.js";
-import { trainroute, seatAvailability } from "./methods.js";
+import {
+  trainroute,
+  seatAvailability,
+  stationList,
+  newTicket,
+} from "./methods.js";
 const app = express();
 const api = express();
 
 app.use("/api", api);
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
 app.use("/", express.static("public"));
+app.post("/", (req, res) => {
+  console.log(req.body);
+});
 app.listen(5000, () => {
   console.log("Server is running on port 5000.");
 });
@@ -89,4 +101,12 @@ api.get("/trainroute", async (req, res) => {
 
 api.get("/seat", async (req, res) => {
   res.send(await seatAvailability(req.query));
+});
+
+api.get("/stationlist", async (req, res) => {
+  res.send(await stationList(req.query));
+});
+
+api.get("/newticket", async (req, res) => {
+  res.send(await newTicket(req.query));
 });

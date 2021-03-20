@@ -24,16 +24,8 @@ export const addToTable = async (body, table) => {
   } else if (table === "trainroute") {
     entry = {
       trainID: body["trainID"],
-      stationID: body["stationID"],
-      time: body["time"],
-      stay: body["stay"],
-    };
-  } else if (table === "trainroute") {
-    entry = {
-      trainID: body["trainID"],
-      stationID: body["stationID"],
-      time: body["time"],
-      stay: body["stay"],
+      routeID: body["routeID"],
+      day: body["day"],
     };
   }
   return new Promise((resolve, reject) => {
@@ -116,8 +108,8 @@ export const update = (body, id, table) => {
             resolve({ error: "not_found" });
           } else {
             console.log(results);
-            console.log({ id: id, ...body });
-            resolve({ id: id, ...body });
+            console.log({ id: id, ...entry });
+            resolve({ id: id, ...entry });
           }
         }
       );
@@ -195,7 +187,38 @@ export const trainroute = async (query) => {
     });
   });
 };
-
+export const stationList = async () => {
+  return new Promise((resolve, reject) => {
+    pool.getConnection((err, conn) => {
+      if (err) throw err;
+      conn.query(`SELECT * FROM station;`, (error, results, fields) => {
+        conn.release();
+        console.log(results);
+        if (error) reject(error);
+        else {
+          resolve(results);
+        }
+      });
+    });
+  });
+};
+var seatQuery = `SELECT
+  seatID,MAX(booking.bookedByUserID) AS available_seat 
+  FROM
+  booking 
+  INNER JOIN
+     trainroute 
+    ON booking.trainrouteID = trainroute.id 
+  INNER JOIN
+     train 
+    ON trainroute.trainID = train.id 
+  WHERE
+  train.trainNumber = ?
+  AND trainroute.day = ?
+  AND stationID BETWEEN ? AND ?
+  AND nextStationID BETWEEN ? AND ?
+  GROUP BY
+  seatID`;
 export const seatAvailability = async (query) => {
   return new Promise((resolve, reject) => {
     pool.getConnection((err, conn) => {
@@ -204,25 +227,7 @@ export const seatAvailability = async (query) => {
         `SELECT
         COUNT(*) as available_seats
      FROM
-        (
-           SELECT
-              MAX(booking.bookedByUserID) AS available_seat 
-           FROM
-              booking 
-              INNER JOIN
-                 trainroute 
-                 ON booking.trainrouteID = trainroute.id 
-              INNER JOIN
-                 train 
-                 ON trainroute.trainID = train.id 
-           WHERE
-              train.trainNumber = ?
-              AND trainroute.day = ?
-              AND stationID BETWEEN ? AND ?
-              AND nextStationID BETWEEN ? AND ?
-           GROUP BY
-              seatID
-        )
+        (${seatQuery})
         table1 
      WHERE
         available_seat IS NULL;`,
@@ -235,6 +240,108 @@ export const seatAvailability = async (query) => {
           query.to,
         ],
         (error, results, fields) => {
+          conn.release();
+          if (error) reject(error);
+          else {
+            resolve(results);
+          }
+        }
+      );
+    });
+  });
+};
+
+export const newTicket = async (query) => {
+  return new Promise((resolve, reject) => {
+    pool.getConnection((err, conn) => {
+      if (err) throw err;
+      conn.query(
+        `
+        SELECT booking.id
+        FROM booking
+        INNER JOIN
+        (SELECT seatID
+          FROM
+            (${seatQuery})
+          table1 
+          WHERE
+            available_seat IS NULL
+          LIMIT 1) seatchosen
+        ON booking.seatID=seatchosen.seatID
+        INNER JOIN
+         trainroute 
+        ON booking.trainrouteID = trainroute.id 
+        INNER JOIN
+          train 
+        ON trainroute.trainID = train.id 
+        WHERE
+          train.trainNumber = ?
+        AND trainroute.day = ?
+        AND stationID BETWEEN ? AND ?
+        AND nextStationID BETWEEN ? AND ?
+        ;`,
+        [
+          query.trainnumber,
+          query.day,
+          query.from,
+          query.to,
+          query.from,
+          query.to,
+          query.trainnumber,
+          query.day,
+          query.from,
+          query.to,
+          query.from,
+          query.to,
+        ],
+        (error, results, fields) => {
+          console.log(results);
+          for (var ids of results) {
+            conn.query(
+              `INSERT INTO ticket SET
+              bookedSeatID=?,
+              fromStationID=?,
+              toStationID=?,
+              userID=?`,
+              [ids.id, query.from, query.to, query.userid],
+              (error, results, fields) => {
+                console.log(results);
+              }
+            );
+          }
+          conn.query(
+            `UPDATE booking
+                INNER JOIN 
+                  (SELECT seatID
+                FROM
+                  (${seatQuery})
+                table1 
+                WHERE
+                  available_seat IS NULL
+                LIMIT 1)
+                as seatbooked
+                ON seatbooked.seatID=booking.seatID
+                SET bookedByUserID=?
+                WHERE stationID BETWEEN ? AND ?
+                AND nextStationID BETWEEN ? AND ?
+                ;`,
+            [
+              query.trainnumber,
+              query.day,
+              query.from,
+              query.to,
+              query.from,
+              query.to,
+              query.userid,
+              query.from,
+              query.to,
+              query.from,
+              query.to,
+            ],
+            (error, results, fields) => {
+              console.log({ ...results });
+            }
+          );
           conn.release();
           if (error) reject(error);
           else {
