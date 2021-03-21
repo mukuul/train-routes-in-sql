@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import mysql from "mysql";
 const port = 3000;
 
@@ -253,6 +254,7 @@ export const seatAvailability = async (query) => {
 
 export const newTicket = async (query) => {
   return new Promise((resolve, reject) => {
+    var ticketNumber = "TRR" + uuidv4().slice(24);
     pool.getConnection((err, conn) => {
       if (err) throw err;
       conn.query(
@@ -299,13 +301,16 @@ export const newTicket = async (query) => {
           for (var ids of results) {
             conn.query(
               `INSERT INTO ticket SET
+              ticketNumber=?,
               bookedSeatID=?,
-              fromStationID=?,
-              toStationID=?,
-              userID=?`,
-              [ids.id, query.from, query.to, query.userid],
+              userID=?;`,
+              [ticketNumber, ids.id, query.userid],
               (error, results, fields) => {
-                console.log(results);
+                console.log({
+                  ticketNumber: ticketNumber,
+                  user: query.userid,
+                  id: ids.id,
+                });
               }
             );
           }
@@ -345,7 +350,51 @@ export const newTicket = async (query) => {
           conn.release();
           if (error) reject(error);
           else {
-            resolve(results);
+            resolve(`tickeNumber:${ticketNumber}
+            `);
+          }
+        }
+      );
+    });
+  });
+};
+
+export const cancelTicket = async (query) => {
+  return new Promise((resolve, reject) => {
+    pool.getConnection((err, conn) => {
+      if (err) throw err;
+      conn.query(
+        `UPDATE
+          ticket SET
+        isCancelled = 1
+        WHERE ticketNumber =?;`,
+        query.ticketNumber,
+        (error, results, fields) => {
+          conn.query(
+            `UPDATE booking
+            INNER JOIN
+            (SELECT
+              bookedSeatID
+            FROM 
+              ticket
+            WHERE 
+              ticketNumber=?
+              ) as cancelled
+              ON booking.id = cancelled.bookedSeatID
+              SET bookedByUserID = NULL
+              ;`,
+            query.ticketNumber,
+            (error, results, fields) => {
+              console.log(`Ticket ${query.ticketNumber} Cancelled`);
+            }
+          );
+          conn.release();
+          console.log(results);
+          if (error) reject(error);
+          else if (results.affectedRows === 0) {
+            resolve({ error: "not_found" });
+          } else {
+            resolve(`Ticket ${query.ticketNumber} Cancelled`);
           }
         }
       );

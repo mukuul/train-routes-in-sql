@@ -20,6 +20,7 @@ import {
   seatAvailability,
   stationList,
   newTicket,
+  cancelTicket,
 } from "./methods.js";
 const app = express();
 const api = express();
@@ -109,4 +110,8 @@ api.get("/stationlist", async (req, res) => {
 
 api.get("/newticket", async (req, res) => {
   res.send(await newTicket(req.query));
+});
+
+api.get("/cancelticket", async (req, res) => {
+  res.send(await cancelTicket(req.query));
 });
