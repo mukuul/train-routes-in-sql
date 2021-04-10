@@ -16,9 +16,7 @@ export const addTrain = async (body) => {
 export const addTrainroute = async (body) => {
   return addToTable(body, "trainroute");
 };
-export const newTicket = async (body) => {
-  return addToTable(body, "ticket");
-};
+
 export const searchStation = async (id) => {
   return search(id, "station");
 };

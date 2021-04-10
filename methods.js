@@ -151,6 +151,37 @@ export const removeAll = async (table) => {
     });
   });
 };
+
+export const stationList = async () => {
+  return new Promise((resolve, reject) => {
+    pool.getConnection((err, conn) => {
+      if (err) throw err;
+      conn.query(`SELECT * FROM station;`, (error, results, fields) => {
+        conn.release();
+        console.log(results);
+        if (error) reject(error);
+        else {
+          resolve(results);
+        }
+      });
+    });
+  });
+};
+export const trainList = async () => {
+  return new Promise((resolve, reject) => {
+    pool.getConnection((err, conn) => {
+      if (err) throw err;
+      conn.query(`SELECT * FROM train;`, (error, results, fields) => {
+        conn.release();
+        console.log(results);
+        if (error) reject(error);
+        else {
+          resolve(results);
+        }
+      });
+    });
+  });
+};
 export const trainroute = async (query) => {
   return new Promise((resolve, reject) => {
     pool.getConnection((err, conn) => {
@@ -188,36 +219,26 @@ export const trainroute = async (query) => {
     });
   });
 };
-export const stationList = async () => {
-  return new Promise((resolve, reject) => {
-    pool.getConnection((err, conn) => {
-      if (err) throw err;
-      conn.query(`SELECT * FROM station;`, (error, results, fields) => {
-        conn.release();
-        console.log(results);
-        if (error) reject(error);
-        else {
-          resolve(results);
-        }
-      });
-    });
-  });
-};
-var seatQuery = `SELECT
+
+var seatQuery = `
+SELECT
   seatID,MAX(booking.bookedByUserID) AS available_seat 
   FROM
   booking 
   INNER JOIN
      trainroute 
-    ON booking.trainrouteID = trainroute.id 
+  ON booking.trainrouteID = trainroute.id 
   INNER JOIN
      train 
-    ON trainroute.trainID = train.id 
+  ON trainroute.trainID = train.id 
+  INNER JOIN 
+      schedule A
+  ON booking.stationID=A.stationID 
   WHERE
   train.trainNumber = ?
   AND trainroute.day = ?
-  AND stationID BETWEEN ? AND ?
-  AND nextStationID BETWEEN ? AND ?
+  AND A.arrTime >= (SELECT A.arrTime FROM schedule A WHERE A.stationID=? )
+  AND A.arrtime < (SELECT B.arrTime FROM schedule B WHERE B.stationID=? )
   GROUP BY
   seatID`;
 export const seatAvailability = async (query) => {
@@ -276,28 +297,28 @@ export const newTicket = async (query) => {
         INNER JOIN
           train 
         ON trainroute.trainID = train.id 
+        INNER JOIN 
+         schedule A
+        ON booking.stationID=A.stationID 
         WHERE
           train.trainNumber = ?
         AND trainroute.day = ?
-        AND stationID BETWEEN ? AND ?
-        AND nextStationID BETWEEN ? AND ?
+        AND A.arrTime >= (SELECT A.arrTime FROM schedule A WHERE A.stationID=?)
+        AND A.arrtime < (SELECT B.arrTime FROM schedule B WHERE B.stationID=?)
         ;`,
         [
           query.trainnumber,
           query.day,
           query.from,
           query.to,
-          query.from,
-          query.to,
           query.trainnumber,
           query.day,
           query.from,
           query.to,
-          query.from,
-          query.to,
         ],
         (error, results, fields) => {
-          console.log(results);
+          console.log(!results["id"]);
+          if (results) resolve({ message: "no available seats" });
           for (var ids of results) {
             conn.query(
               `INSERT INTO ticket SET
@@ -316,30 +337,29 @@ export const newTicket = async (query) => {
           }
           conn.query(
             `UPDATE booking
-                INNER JOIN 
-                  (SELECT seatID
-                FROM
-                  (${seatQuery})
-                table1 
-                WHERE
-                  available_seat IS NULL
-                LIMIT 1)
-                as seatbooked
-                ON seatbooked.seatID=booking.seatID
-                SET bookedByUserID=?
-                WHERE stationID BETWEEN ? AND ?
-                AND nextStationID BETWEEN ? AND ?
+            INNER JOIN 
+              (SELECT seatID
+            FROM
+              (${seatQuery})
+              table1
+            WHERE
+              available_seat IS NULL
+            LIMIT 1)
+              as seatbooked
+            ON seatbooked.seatID=booking.seatID
+            INNER JOIN 
+              schedule A
+            ON booking.stationID=A.stationID 
+            SET bookedByUserID=?
+            WHERE A.arrTime >= (SELECT A.arrTime FROM schedule A WHERE A.stationID=?)
+            AND A.arrtime < (SELECT B.arrTime FROM schedule B WHERE B.stationID=?)
                 ;`,
             [
               query.trainnumber,
               query.day,
               query.from,
               query.to,
-              query.from,
-              query.to,
               query.userid,
-              query.from,
-              query.to,
               query.from,
               query.to,
             ],

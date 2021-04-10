@@ -19,6 +19,7 @@ import {
   trainroute,
   seatAvailability,
   stationList,
+  trainList,
   newTicket,
   cancelTicket,
 } from "./methods.js";
@@ -100,12 +101,16 @@ api.get("/trainroute", async (req, res) => {
   res.send(await trainroute(req.query));
 });
 
-api.get("/seat", async (req, res) => {
-  res.send(await seatAvailability(req.query));
-});
-
 api.get("/stationlist", async (req, res) => {
   res.send(await stationList(req.query));
+});
+
+api.get("/trainlist", async (req, res) => {
+  res.send(await trainList(req.query));
+});
+
+api.get("/seat", async (req, res) => {
+  res.send(await seatAvailability(req.query));
 });
 
 api.get("/newticket", async (req, res) => {
